@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    lazy-initialization: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai

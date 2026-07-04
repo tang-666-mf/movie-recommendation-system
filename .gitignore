@@ -1,0 +1,26 @@
+# Maven build output
+**/target/
+**/data/*.mv.db
+**/data/*.trace.db
+*.jar
+*.war
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings
+*.class
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# H2 database (stage5)
+**/data/recommend_db*

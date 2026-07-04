@@ -1,0 +1,401 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个性化电影推荐系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .search-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .search-card label {
+            display: block;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            width: 200px;
+            padding: 12px 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #a78bfa;
+            background: rgba(255,255,255,0.12);
+            box-shadow: 0 0 20px rgba(167,139,250,0.2);
+        }
+
+        .search-box input::placeholder {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .search-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+        }
+
+        .search-box button:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #f87171;
+            margin-top: 12px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .result-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            display: none;
+        }
+
+        .result-card .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .result-card .user-info .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .result-card .user-info .text h2 {
+            font-size: 18px;
+        }
+
+        .result-card .user-info .text span {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .rec-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .rec-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .rec-item:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateX(4px);
+        }
+
+        .rec-item .rank {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #a0522d); }
+
+        .rec-item .info {
+            flex: 1;
+        }
+
+        .rec-item .info .title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .rec-item .info .category {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .rec-item .rating {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+            flex-shrink: 0;
+        }
+
+        .quick-links {
+            margin-top: 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .quick-links .user-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            margin: 4px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.06);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .quick-links .user-badge:hover {
+            border-color: #a78bfa;
+            color: #fff;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #475569;
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 24px; }
+            .search-box input { width: 150px; }
+            .search-box { flex-direction: column; }
+            .rec-item { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎬 个性化电影推荐系统</h1>
+        <p>基于 Spark MLlib ALS 协同过滤算法 · 为您推荐最爱的电影</p>
+    </div>
+
+    <div class="search-card">
+        <label>🔍 输入用户ID，获取个性化电影推荐</label>
+        <div class="search-box">
+            <input type="number" id="userIdInput" placeholder="例如: 1, 2, 3, 100" min="1">
+            <button onclick="getRecommendation()">获取推荐</button>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="quick-links">
+            快速体验用户:
+            <span class="user-badge" onclick="quickUser(1)">User 1</span>
+            <span class="user-badge" onclick="quickUser(2)">User 2</span>
+            <span class="user-badge" onclick="quickUser(3)">User 3</span>
+            <span class="user-badge" onclick="quickUser(4)">User 4</span>
+            <span class="user-badge" onclick="quickUser(100)">User 100</span>
+        </div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+        <div class="user-info">
+            <div class="avatar" id="userAvatar">U</div>
+            <div class="text">
+                <h2 id="userTitle">用户推荐</h2>
+                <span>基于ALS协同过滤模型 · Top 3 推荐</span>
+            </div>
+        </div>
+        <div class="rec-list" id="recList">
+            <!-- 推荐列表由JS动态生成 -->
+        </div>
+    </div>
+
+    <div class="footer">
+        桂林航天工业学院 · 大数据技术综合设计 · 基于Spark生态的智能影视推荐与实时分析系统
+    </div>
+</div>
+
+<script>
+    async function getRecommendation() {
+        const userId = document.getElementById('userIdInput').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+        const resultCard = document.getElementById('resultCard');
+        const recList = document.getElementById('recList');
+        const userAvatar = document.getElementById('userAvatar');
+        const userTitle = document.getElementById('userTitle');
+
+        // 清空错误
+        errorMsg.style.display = 'none';
+
+        // 输入验证
+        if (!userId) {
+            errorMsg.textContent = '请输入用户ID';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        if (isNaN(userId) || parseInt(userId) <= 0) {
+            errorMsg.textContent = '请输入有效的正整数用户ID';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        // 显示加载中
+        recList.innerHTML = '<div class="loading"><div class="spinner"></div>正在获取推荐...</div>';
+        resultCard.style.display = 'block';
+
+        try {
+            const response = await fetch(`/api/recommend?userId=${userId}`);
+            const result = await response.json();
+
+            if (result.code === 200 && result.data && result.data.length > 0) {
+                const movies = result.data;
+                userAvatar.textContent = 'U' + userId;
+                userTitle.textContent = `用户 ${userId} 的推荐电影`;
+
+                recList.innerHTML = movies.map((movie, index) => {
+                    const stars = getStars(movie.predictedRating);
+                    const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : 'rank-3';
+                    return `
+                        <div class="rec-item">
+                            <div class="rank ${rankClass}">${index + 1}</div>
+                            <div class="info">
+                                <div class="title">${movie.title || '未知电影'}</div>
+                                <div class="category">${movie.category || '未知分类'} · 预测评分 ${movie.predictedRating.toFixed(2)}</div>
+                            </div>
+                            <div class="rating">${stars}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                recList.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:14px;">暂无推荐数据，请稍后再试</div>';
+            }
+        } catch (e) {
+            errorMsg.textContent = '请求失败: ' + e.message;
+            errorMsg.style.display = 'block';
+            recList.innerHTML = '';
+        }
+    }
+
+    function getStars(rating) {
+        const full = Math.floor(rating);
+        const half = rating - full >= 0.5;
+        let stars = '';
+        for (let i = 0; i < full; i++) stars += '⭐';
+        if (half) stars += '✨';
+        return stars;
+    }
+
+    function quickUser(userId) {
+        document.getElementById('userIdInput').value = userId;
+        getRecommendation();
+    }
+
+    // 按回车触发搜索
+    document.getElementById('userIdInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') getRecommendation();
+    });
+</script>
+</body>
+</html>
